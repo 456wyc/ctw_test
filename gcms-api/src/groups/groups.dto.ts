@@ -32,6 +32,8 @@ export class GroupCreateDTO {
   desc?: string;
 }
 
+export class GroupUpdateDTO extends PartialType(GroupCreateDTO) {}
+
 export class GroupListQueryDTO extends IntersectionType(
   PagingQueryDTO,
   PartialType(PickType(GroupCreateDTO, ['name', 'desc', 'type'] as const)),

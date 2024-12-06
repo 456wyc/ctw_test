@@ -4,7 +4,11 @@ https://docs.nestjs.com/providers#services
 
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/database/database.service';
-import { GroupCreateDTO, GroupListQueryDTO } from './groups.dto';
+import {
+  GroupCreateDTO,
+  GroupListQueryDTO,
+  GroupUpdateDTO,
+} from './groups.dto';
 import { ConfigListQueryDTO } from 'src/configs/configs.dto';
 
 @Injectable()
@@ -22,6 +26,25 @@ export class GroupsService {
   async getGroups(query: GroupListQueryDTO) {
     this.logger.log('getGroups');
     return await this.prisma.group.findMany();
+  }
+
+  async getGroup(groupId: string) {
+    this.logger.log('getGroup');
+    return await this.prisma.group.findUnique({
+      where: {
+        id: groupId,
+      },
+    });
+  }
+
+  async updateGroup(groupId: string, data: GroupUpdateDTO) {
+    this.logger.log('updateGroup');
+    return await this.prisma.group.update({
+      where: {
+        id: groupId,
+      },
+      data: data,
+    });
   }
 
   async getConfigs(groupId: string, query: ConfigListQueryDTO) {
