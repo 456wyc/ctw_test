@@ -9,7 +9,7 @@ import { Module } from '@nestjs/common';
 @Module({
   imports: [],
   controllers: [ConfigsController],
-  providers: [
-        ConfigsService, ],
+  providers: [ConfigsService],
+  exports: [ConfigsService],
 })
 export class ConfigsModule {}
