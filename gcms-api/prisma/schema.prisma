@@ -38,7 +38,7 @@ model User {
 model Client {
     id           String    @id @default(cuid())
     name         String    @db.VarChar(50)
-    envId        String
+    envId        String    @db.VarChar(50)
     clientId     String    @db.VarChar(50)
     clientSecret String    @db.VarChar(50)
     createdAt    DateTime  @default(now())
@@ -109,8 +109,8 @@ model Config {
 // 版本
 model Version {
     id        String    @id @default(cuid())
-    configId  String
-    schemaId  String
+    configId  String    @db.VarChar(50)
+    schemaId  String    @db.VarChar(50)
     name      String    @db.VarChar(50)
     schema    Json      @db.Json
     content   Json      @db.Json
@@ -145,8 +145,8 @@ model Group {
 
 // 环境配置
 model EnvConfigVersion {
-    envId     String
-    versionId String
+    envId     String   @db.VarChar(50)
+    versionId String   @db.VarChar(50)
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
@@ -159,8 +159,8 @@ model EnvConfigVersion {
 
 // 配置分组
 model ConfigGroup {
-    configId String
-    groupId  String
+    configId String @db.VarChar(50)
+    groupId  String @db.VarChar(50)
     group    Group  @relation(fields: [groupId], references: [id])
     config   Config @relation(fields: [configId], references: [id])
 
@@ -171,11 +171,11 @@ model ConfigGroup {
 // 日志
 model ChangeLog {
     id        String    @id @default(cuid())
-    configId  String
-    versionId String
+    configId  String    @db.VarChar(50)
+    versionId String    @db.VarChar(50)
     old       Json      @db.Json
     new       Json      @db.Json
-    operator  String
+    operator  String    @db.VarChar(50)
     createdAt DateTime  @default(now())
     updatedAt DateTime  @updatedAt
     deletedAt DateTime?
@@ -192,10 +192,10 @@ model ChangeLog {
 // 客户端订阅
 model ClientSubscriptions {
     id           String    @id @default(cuid())
-    clientId     String
-    configId     String
-    versionId    String?
-    preVersionId String?
+    clientId     String    @db.VarChar(50)
+    configId     String    @db.VarChar(50)
+    versionId    String?   @db.VarChar(50)
+    preVersionId String?   @db.VarChar(50)
     webhookUrl   String?   @db.VarChar(200)
     createdAt    DateTime  @default(now())
     updatedAt    DateTime  @updatedAt

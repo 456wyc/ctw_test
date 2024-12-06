@@ -27,7 +27,6 @@ export class GroupCreateDTO {
     description: 'Group description',
   })
   @IsString()
-  z;
   @Length(1, 200)
   desc?: string;
 }

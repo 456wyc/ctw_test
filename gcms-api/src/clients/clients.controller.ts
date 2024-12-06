@@ -2,26 +2,31 @@
 https://docs.nestjs.com/controllers#controllers
 */
 
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
-import { ClientCreateDTO, ClientUpdateDTO } from './clients.dto';
+import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
+import {
+  ClientCreateDTO,
+  ClientListQueryDTO,
+  ClientUpdateDTO,
+} from './clients.dto';
+import { ClientsService } from './clients.service';
 
 @Controller('clients')
 export class ClientsController {
-  constructor() {}
+  constructor(private clientsService: ClientsService) {}
 
   @Get()
-  getClients() {
-    return 'This action returns all clients';
+  getClients(@Query() query: ClientListQueryDTO) {
+    return this.clientsService.getClients(query);
   }
 
   @Get(':id')
   getClient(@Param('id') id: string) {
-    return `This action returns a #${id} client`;
+    return  this.clientsService.getClient(id);
   }
 
   @Post()
   createClient(@Body() createClientDto: ClientCreateDTO) {
-    return 'This action adds a new client';
+    return this.clientsService.createClient(createClientDto);
   }
 
   @Put(':id')
