@@ -1,0 +1,213 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider     = "mysql"
+    // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below
+    // Further reading:
+    // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
+    // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string
+    url          = env("DATABASE_URL")
+    relationMode = "prisma"
+}
+
+// model BaseModel {
+//     id   String @id @default(cuid())
+//     createdAt DateTime @default(now())
+//     updatedAt DateTime @updatedAt
+// }
+
+// 用户
+model User {
+    id        String    @id @default(cuid())
+    name      String?   @db.VarChar(50)
+    email     String    @unique
+    pass_salt String    @db.VarChar(64)
+    pass_hash String    @db.VarChar(64)
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+
+    changeLogs ChangeLog[]
+}
+
+// 客户端
+model Client {
+    id           String    @id @default(cuid())
+    name         String    @db.VarChar(50)
+    envId        String
+    clientId     String    @db.VarChar(50)
+    clientSecret String    @db.VarChar(50)
+    createdAt    DateTime  @default(now())
+    updatedAt    DateTime  @updatedAt
+    deletedAt    DateTime?
+
+    env        Env                   @relation(fields: [envId], references: [id])
+    subscribes ClientSubscriptions[]
+
+    @@index([envId])
+}
+
+// 环境
+model Env {
+    id        String    @id @default(cuid())
+    name      String    @db.VarChar(50)
+    desc      String?   @db.VarChar(255)
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+
+    EnvConfigVersion EnvConfigVersion[]
+    clients          Client[]
+
+    @@index([name])
+}
+
+// 配置
+model Config {
+    id        String    @id @default(cuid())
+    name      String    @db.VarChar(50)
+    desc      String?   @db.VarChar(255)
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+
+    versions            Version[]
+    configGroups        ConfigGroup[]
+    ChangeLog           ChangeLog[]
+    clientSubscriptions ClientSubscriptions[]
+    // Schema               Schema[]
+
+    @@index([name])
+}
+
+// 模板
+// model Schema {
+//     id        String    @id @default(cuid())
+//     configId  String
+//     versionId String
+//     content   Json      @db.Json
+//     createdAt DateTime  @default(now())
+//     updatedAt DateTime  @updatedAt
+//     deletedAt DateTime?
+
+//     config   Config    @relation(fields: [configId], references: [id])
+//     versions Version[]
+
+//     @@index([configId])
+//     @@index([versionId])
+// }
+
+// enum ConfigStatus {
+//     Draft
+//     Published
+// }
+
+// 版本
+model Version {
+    id        String    @id @default(cuid())
+    configId  String
+    schemaId  String
+    name      String    @db.VarChar(50)
+    schema    Json      @db.Json
+    content   Json      @db.Json
+    status    String    @db.VarChar(50)
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+
+    config         Config                @relation(fields: [configId], references: [id])
+    // schema         Schema                 @relation(fields: [schemaId], references: [id])
+    envVersions    EnvConfigVersion[]
+    changeLogs     ChangeLog[]
+    clientCurrSubs ClientSubscriptions[] @relation(name: "currVersion")
+    clientPreSubs  ClientSubscriptions[] @relation(name: "preVersion")
+
+    @@index([configId])
+    @@index([schemaId])
+}
+
+// 分组
+model Group {
+    id        String    @id @default(cuid())
+    name      String    @db.VarChar(50)
+    type      String?   @db.VarChar(50)
+    desc      String?   @db.VarChar(255)
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+
+    configGroups ConfigGroup[]
+}
+
+// 环境配置
+model EnvConfigVersion {
+    envId     String
+    versionId String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    env     Env     @relation(fields: [envId], references: [id])
+    version Version @relation(fields: [versionId], references: [id])
+
+    @@id([envId, versionId])
+    @@index([versionId])
+}
+
+// 配置分组
+model ConfigGroup {
+    configId String
+    groupId  String
+    group    Group  @relation(fields: [groupId], references: [id])
+    config   Config @relation(fields: [configId], references: [id])
+
+    @@id([configId, groupId])
+    @@index([groupId])
+}
+
+// 日志
+model ChangeLog {
+    id        String    @id @default(cuid())
+    configId  String
+    versionId String
+    old       Json      @db.Json
+    new       Json      @db.Json
+    operator  String
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+
+    config  Config  @relation(fields: [configId], references: [id])
+    version Version @relation(fields: [versionId], references: [id])
+    user    User    @relation(fields: [operator], references: [id])
+
+    @@index([operator])
+    @@index([configId])
+    @@index([versionId])
+}
+
+// 客户端订阅
+model ClientSubscriptions {
+    id           String    @id @default(cuid())
+    clientId     String
+    configId     String
+    versionId    String?
+    preVersionId String?
+    webhookUrl   String?   @db.VarChar(200)
+    createdAt    DateTime  @default(now())
+    updatedAt    DateTime  @updatedAt
+    deletedAt    DateTime?
+
+    client      Client   @relation(fields: [clientId], references: [id])
+    config      Config   @relation(fields: [configId], references: [id])
+    currVersion Version? @relation(name: "currVersion", fields: [versionId], references: [id])
+    preVersion  Version? @relation(name: "preVersion", fields: [preVersionId], references: [id])
+
+    @@index([clientId])
+    @@index([configId])
+    @@index([versionId])
+    @@index([preVersionId])
+}
